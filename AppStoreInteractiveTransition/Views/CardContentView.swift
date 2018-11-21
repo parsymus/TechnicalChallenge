@@ -8,14 +8,23 @@
 
 import UIKit
 
+//Added by Laurent
+protocol CardCloseDelegate: class {
+    func closeBtnClicked()
+}
+
 @IBDesignable final class CardContentView: UIView, NibLoadable {
 
     var viewModel: CardContentViewModel? {
         didSet {
-            primaryLabel.text = viewModel?.primary
-            secondaryLabel.text = viewModel?.secondary
-            detailLabel.text = viewModel?.description
-            imageView.image = viewModel?.image
+            if let vm = viewModel {
+                primaryLabel.text = vm.primary
+                secondaryLabel.text = vm.secondary
+                detailLabel.text = vm.description
+                imageView.image = vm.image
+                iconImageView.image = vm.appIcon
+                closeButton.isHidden = !vm.isFullScreen
+            }
         }
     }
 
@@ -23,12 +32,22 @@ import UIKit
     @IBOutlet weak var primaryLabel: UILabel!
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var detailLabel: UILabel!
-
+    @IBOutlet weak var closeButton: UIButton!
+    @IBOutlet weak var iconImageView: UIImageView!
+    
     @IBOutlet weak var imageToTopAnchor: NSLayoutConstraint!
     @IBOutlet weak var imageToLeadingAnchor: NSLayoutConstraint!
     @IBOutlet weak var imageToTrailingAnchor: NSLayoutConstraint!
     @IBOutlet weak var imageToBottomAnchor: NSLayoutConstraint!
 
+    /* Laurent: I Added a delegate to inform the ViewController
+     the close button has been pressed */
+    weak var closeDelegate: CardCloseDelegate?
+    
+    @IBAction func closeCard(_ sender: UIButton) {
+        closeDelegate?.closeBtnClicked()
+    }
+    
     @IBInspectable var backgroundImage: UIImage? {
         get {
             return self.imageView.image
