@@ -60,14 +60,6 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if GlobalConstants.isEnabledDebugAnimatingViews {
-            scrollView.layer.borderWidth = 3
-            scrollView.layer.borderColor = UIColor.green.cgColor
-
-            scrollView.subviews.first!.layer.borderWidth = 3
-            scrollView.subviews.first!.layer.borderColor = UIColor.purple.cgColor
-        }
-
         scrollView.delegate = self
         scrollView.contentInsetAdjustmentBehavior = .never
         cardContentView.viewModel = cardViewModel
