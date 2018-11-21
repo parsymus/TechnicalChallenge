@@ -16,22 +16,38 @@ final class HomeViewController: StatusBarAnimatableViewController {
 
     private lazy var cardModels: [CardContentViewModel] = [
         CardContentViewModel(primary: "GAME OF THE DAY",
-                             secondary: "Minecraft makes a splash",
-                             description: "The ocean is a big place. Tap to read how Minecraft's just got even bigger.",
-                             image: UIImage(named: "drowning.png")!.resize(toWidth: UIScreen.main.bounds.size.width * (1/GlobalConstants.cardHighlightedFactor))),
-        CardContentViewModel(primary: "You won't believe this guy",
-                             secondary: "Something we want",
-                             description: "They have something we want which is not something we need.",
-                             image: #imageLiteral(resourceName: "img2.jpg").resize(toWidth: UIScreen.main.bounds.size.width * (1/GlobalConstants.cardHighlightedFactor))),
-        CardContentViewModel(primary: "LET'S PLAY",
-                             secondary: "Cats, cats, cats!",
-                             description: "Play these games right meow.",
-                             image: #imageLiteral(resourceName: "img1.png").resize(toWidth: UIScreen.main.bounds.size.width * (1/GlobalConstants.cardHighlightedFactor)))
+                             secondary: "Wormarium is finally back!",
+                             description: "The earth is an amazing planet. Tap to discover what's under its surface.",
+                             image: UIImage(named: "worm-game.png")!.resize(toWidth: UIScreen.main.bounds.size.width * (1/GlobalConstants.cardHighlightedFactor)),
+                             appIcon: UIImage(named: "app-icon.png")!,
+                             isFullScreen: false),
+        CardContentViewModel(primary: "APP OF THE DAY",
+                             secondary: "Feel good",
+                             description: "You will feel so much better after using this app on a daily basis",
+                             image: UIImage(named: "meditation.jpg")!,
+                             appIcon: UIImage(named: "app-icon.png")!,
+                             isFullScreen: false),
+        CardContentViewModel(primary: "LET'S LEARN",
+                             secondary: "Read, read, read!",
+                             description: "All this knowledge right if front of you. Don't be shy, embrace it.",
+                             image: UIImage(named: "book.jpg")!,
+                             appIcon: UIImage(named: "app-icon.png")!,
+                             isFullScreen: false)
     ]
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        //Laurent added background image
+        let backgroundImage = UIImage(named: "app-list-background.jpg")
+        let backgroundView = UIImageView(frame: self.view.bounds)
+        backgroundView.contentMode = UIViewContentMode.scaleAspectFill
+        backgroundView.clipsToBounds = true
+        backgroundView.image = backgroundImage
+        backgroundView.center = self.view.center
+        self.view.addSubview(backgroundView)
+        self.view.sendSubview(toBack: backgroundView)
+        
         // Make it responds to highlight state faster
         collectionView.delaysContentTouches = false
 

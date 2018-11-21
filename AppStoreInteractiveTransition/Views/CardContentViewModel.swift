@@ -13,12 +13,16 @@ struct CardContentViewModel {
     let secondary: String
     let description: String
     let image: UIImage
+    let appIcon : UIImage
+    var isFullScreen: Bool
 
     func highlightedImage() -> CardContentViewModel {
         let scaledImage = image.resize(toWidth: image.size.width * GlobalConstants.cardHighlightedFactor)
         return CardContentViewModel(primary: primary,
                                     secondary: secondary,
                                     description: description,
-                                    image: scaledImage)
+                                    image: scaledImage,
+                                    appIcon: appIcon,
+                                    isFullScreen: isFullScreen)
     }
 }
