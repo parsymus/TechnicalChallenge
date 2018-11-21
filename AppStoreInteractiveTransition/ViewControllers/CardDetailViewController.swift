@@ -9,7 +9,7 @@
 import UIKit
 
 
-class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewDelegate {
+class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewDelegate, CardCloseDelegate {
 
     // This constraint limits card content to not be covered by root view.
     // This is useful to make the card content expands when presenting,
@@ -25,6 +25,7 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
     
     var cardViewModel: CardContentViewModel! {
         didSet {
+            cardViewModel.isFullScreen = true
             if self.cardContentView != nil {
                 self.cardContentView.viewModel = cardViewModel
             }
@@ -70,6 +71,7 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
         scrollView.delegate = self
         scrollView.contentInsetAdjustmentBehavior = .never
         cardContentView.viewModel = cardViewModel
+        cardContentView.closeDelegate = self
         cardContentView.setFontState(isHighlighted: isFontStateHighlighted)
 
         dismissalPanGesture.addTarget(self, action: #selector(handleDismissalPan(gesture:)))
@@ -87,7 +89,7 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
         view.addGestureRecognizer(dismissalScreenEdgePanGesture)
     }
 
-    func didSuccessfullyDragDownToDismiss() {
+    func dismissViewController() {
         cardViewModel = unhighlightedCardViewModel
         dismiss(animated: true)
     }
@@ -126,30 +128,13 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
 
         let currentLocation = gesture.location(in: nil)
         let progress = isScreenEdgePan ? (gesture.translation(in: targetAnimatedView).x / 100) : (currentLocation.y - startingPoint.y) / 100
-        let targetShrinkScale: CGFloat = 0.86
-        let targetCornerRadius: CGFloat = GlobalConstants.cardCornerRadius
-
-        func createInteractiveDismissalAnimatorIfNeeded() -> UIViewPropertyAnimator {
-            if let animator = dismissalAnimator {
-                return animator
-            } else {
-                let animator = UIViewPropertyAnimator(duration: 0, curve: .linear, animations: {
-                    targetAnimatedView.transform = .init(scaleX: targetShrinkScale, y: targetShrinkScale)
-                    targetAnimatedView.layer.cornerRadius = targetCornerRadius
-                })
-                animator.isReversed = false
-                animator.pauseAnimation()
-                animator.fractionComplete = progress
-                return animator
-            }
-        }
 
         switch gesture.state {
         case .began:
-            dismissalAnimator = createInteractiveDismissalAnimatorIfNeeded()
+            dismissalAnimator = createInteractiveDismissalAnimatorIfNeeded(progress: progress)
 
         case .changed:
-            dismissalAnimator = createInteractiveDismissalAnimatorIfNeeded()
+            dismissalAnimator = createInteractiveDismissalAnimatorIfNeeded(progress: progress)
 
             let actualProgress = progress
             let isDismissalSuccess = actualProgress >= 1.0
@@ -161,7 +146,7 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
                 dismissalAnimator!.addCompletion { (pos) in
                     switch pos {
                     case .end:
-                        self.didSuccessfullyDragDownToDismiss()
+                        self.dismissViewController()
                     default:
                         fatalError("Must finish dismissal at end!")
                     }
@@ -195,6 +180,25 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
             fatalError("Impossible gesture state? \(gesture.state.rawValue)")
         }
     }
+    
+    // Modified by Laurent to make it reusable
+    func createInteractiveDismissalAnimatorIfNeeded(progress: CGFloat) -> UIViewPropertyAnimator {
+        if let animator = dismissalAnimator {
+            return animator
+        } else {
+            let animator = UIViewPropertyAnimator(duration: 0, curve: .linear, animations: {
+                self.view.transform = .init(scaleX: GlobalConstants.dismissalShrinkScale,
+                                            y: GlobalConstants.dismissalShrinkScale)
+                self.view.layer.cornerRadius = GlobalConstants.cardCornerRadius
+                self.cardContentView.setSwipeToCloseProgress(progress: 1)
+            })
+            animator.isReversed = false
+            animator.pauseAnimation()
+            animator.fractionComplete = progress
+            return animator
+        }
+    }
+
 
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
@@ -224,6 +228,15 @@ class CardDetailViewController: StatusBarAnimatableViewController, UIScrollViewD
     override var statusBarAnimatableConfig: StatusBarAnimatableConfig {
         return StatusBarAnimatableConfig(prefersHidden: true,
                                          animation: .slide)
+    }
+    
+    //Added by Laurent
+    func closeBtnClicked() {
+        dismissalAnimator = createInteractiveDismissalAnimatorIfNeeded(progress:0)
+        //Starts the shrink animation
+        dismissalAnimator!.startAnimation()
+        //Dismiss the VC while we shrink the view so the text description disappear as well
+        self.dismissViewController()
     }
 }
 

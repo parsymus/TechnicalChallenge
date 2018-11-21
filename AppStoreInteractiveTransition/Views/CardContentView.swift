@@ -86,10 +86,14 @@ protocol CardCloseDelegate: class {
     func setFontState(isHighlighted: Bool) {
         if isHighlighted {
             primaryLabel.font = UIFont.systemFont(ofSize: 36 * GlobalConstants.cardHighlightedFactor, weight: .bold)
-            secondaryLabel.font = UIFont.systemFont(ofSize: 18 * GlobalConstants.cardHighlightedFactor, weight: .semibold)
         } else {
             primaryLabel.font = UIFont.systemFont(ofSize: 36, weight: .bold)
-            secondaryLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        }
+    }
+    
+    func setSwipeToCloseProgress(progress: CGFloat) {
+        if !closeButton.isHidden && progress >= 0 && progress <= 1 {
+            closeButton.alpha = 1 - progress
         }
     }
 }
