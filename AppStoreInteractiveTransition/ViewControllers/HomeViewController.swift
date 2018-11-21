@@ -122,7 +122,10 @@ extension HomeViewController {
 
         // If `modalPresentationStyle` is not `.fullScreen`, this should be set to true to make status bar depends on presented vc.
         vc.modalPresentationCapturesStatusBarAppearance = true
-        vc.modalPresentationStyle = .custom
+        // Laurent : Changed modalPresentationStyle from custom to overCurrentContext
+        // to avoid using the custom CardPresentationController with blurview
+        // since blurview creates a small flickering at the end of the animation
+        vc.modalPresentationStyle = .overCurrentContext
 
         present(vc, animated: true, completion: { [unowned cell] in
             // Unfreeze
