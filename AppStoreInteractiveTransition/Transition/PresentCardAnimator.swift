@@ -82,67 +82,30 @@ final class PresentCardTransitionDriver {
         let cardDetailView = ctx.view(forKey: .to)!
         let fromCardFrame = params.fromCardFrame
 
-        // Temporary container view for animation
-        let animatedContainerView = UIView()
-        animatedContainerView.translatesAutoresizingMaskIntoConstraints = false
-        if GlobalConstants.isEnabledDebugAnimatingViews {
-            animatedContainerView.layer.borderColor = UIColor.yellow.cgColor
-            animatedContainerView.layer.borderWidth = 4
-            cardDetailView.layer.borderColor = UIColor.red.cgColor
-            cardDetailView.layer.borderWidth = 2
-        }
-        container.addSubview(animatedContainerView)
-
-        do /* Fix centerX/width/height of animated container to container */ {
-            let animatedContainerConstraints = [
-                animatedContainerView.widthAnchor.constraint(equalToConstant: container.bounds.width),
-                animatedContainerView.heightAnchor.constraint(equalToConstant: container.bounds.height),
-                animatedContainerView.centerXAnchor.constraint(equalTo: container.centerXAnchor)
-            ]
-            NSLayoutConstraint.activate(animatedContainerConstraints)
-        }
-
-        let animatedContainerVerticalConstraint: NSLayoutConstraint = {
+        /* Laurent: Directly add the cardDetailView to the container
+         instead of using a container. We can run 2 animations simultaneously on the same view */
+        container.addSubview(cardDetailView)
+        cardDetailView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let animatedVerticalConstraint: NSLayoutConstraint = {
             switch GlobalConstants.cardVerticalExpandingStyle {
             case .fromCenter:
-                return animatedContainerView.centerYAnchor.constraint(
+                return cardDetailView.centerYAnchor.constraint(
                     equalTo: container.centerYAnchor,
                     constant: (fromCardFrame.height/2 + fromCardFrame.minY) - container.bounds.height/2
                 )
             case .fromTop:
-                return animatedContainerView.topAnchor.constraint(equalTo: container.topAnchor, constant: fromCardFrame.minY)
+                return cardDetailView.topAnchor.constraint(equalTo: container.topAnchor, constant: fromCardFrame.minY)
             }
 
         }()
-        animatedContainerVerticalConstraint.isActive = true
+        animatedVerticalConstraint.isActive = true
 
-        animatedContainerView.addSubview(cardDetailView)
-        cardDetailView.translatesAutoresizingMaskIntoConstraints = false
-
-        let weirdCardToAnimatedContainerTopAnchor: NSLayoutConstraint
-
-        do /* Pin top (or center Y) and center X of the card, in animated container view */ {
-            let verticalAnchor: NSLayoutConstraint = {
-                switch GlobalConstants.cardVerticalExpandingStyle {
-                case .fromCenter:
-                    return cardDetailView.centerYAnchor.constraint(equalTo: animatedContainerView.centerYAnchor)
-                case .fromTop:
-                    // WTF: SUPER WEIRD BUG HERE.
-                    // I should set this constant to 0 (or nil), to make cardDetailView sticks to the animatedContainerView's top.
-                    // BUT, I can't set constant to 0, or any value in range (-1,1) here, or there will be abrupt top space inset while animating.
-                    // Funny how -1 and 1 work! WTF. You can try set it to 0.
-                    return cardDetailView.topAnchor.constraint(equalTo: animatedContainerView.topAnchor, constant: -1)
-                }
-            }()
-            let cardConstraints = [
-                verticalAnchor,
-                cardDetailView.centerXAnchor.constraint(equalTo: animatedContainerView.centerXAnchor),
-                ]
-            NSLayoutConstraint.activate(cardConstraints)
-        }
         let cardWidthConstraint = cardDetailView.widthAnchor.constraint(equalToConstant: fromCardFrame.width)
         let cardHeightConstraint = cardDetailView.heightAnchor.constraint(equalToConstant: fromCardFrame.height)
-        NSLayoutConstraint.activate([cardWidthConstraint, cardHeightConstraint])
+        let cardConstraints = cardDetailView.centerXAnchor.constraint(equalTo: container.centerXAnchor)
+        
+        NSLayoutConstraint.activate([cardWidthConstraint, cardHeightConstraint, cardConstraints])
 
         cardDetailView.layer.cornerRadius = GlobalConstants.cardCornerRadius
 
@@ -161,7 +124,7 @@ final class PresentCardTransitionDriver {
         // 1. Animate container bouncing up
         // ------------------------------
         func animateContainerBouncingUp() {
-            animatedContainerVerticalConstraint.constant = 0
+            animatedVerticalConstraint.constant = 0
             container.layoutIfNeeded()
         }
 
@@ -169,24 +132,16 @@ final class PresentCardTransitionDriver {
         // 2. Animate cardDetail filling up the container
         // ------------------------------
         func animateCardDetailViewSizing() {
-            cardWidthConstraint.constant = animatedContainerView.bounds.width
-            cardHeightConstraint.constant = animatedContainerView.bounds.height
+            cardWidthConstraint.constant = container.bounds.width
+            cardHeightConstraint.constant = container.bounds.height
             cardDetailView.layer.cornerRadius = 0
             container.layoutIfNeeded()
         }
 
         func completeEverything() {
-            // Remove temporary `animatedContainerView`
-            animatedContainerView.removeConstraints(animatedContainerView.constraints)
-            animatedContainerView.removeFromSuperview()
-
-            // Re-add to the top
-            container.addSubview(cardDetailView)
-
             cardDetailView.removeConstraints([topTemporaryFix, cardWidthConstraint, cardHeightConstraint])
 
-            // Keep -1 to be consistent with the weird bug above.
-            cardDetailView.edges(to: container, top: -1)
+            cardDetailView.edges(to: container, top: 0)
 
             // No longer need the bottom constraint that pins bottom of card content to its root.
             screens.cardDetail.cardBottomToRootBottomConstraint.isActive = false
