@@ -2,7 +2,7 @@
 
 Just another attempt to simulate App Store's Card transition:
 
-![demo](https://raw.githubusercontent.com/aunnnn/AppStoreiOS11InteractiveTransition/master/appstoreios11demo.gif)
+![demo](https://github.com/parsymus/TechnicalChallenge/blob/master/app-preview.gif)
 
 Implementation details are available in slides under the `MobileConf` folder, **in the last section ('5 Phases of Interaction')**.
 
